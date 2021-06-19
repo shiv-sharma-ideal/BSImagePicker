@@ -40,6 +40,7 @@ import Photos
 
     /// Title to use for button
     public var doneButtonTitle = Bundle(for: UIBarButtonItem.self).localizedString(forKey: "Done", value: "Done", table: "")
+    lazy private var messageLabel = UILabel()
 
     // MARK: Internal properties
     var assetStore: AssetStore
@@ -156,5 +157,36 @@ import Photos
 
     func updateAlbumButton() {
         albumButton.isHidden = albums.count < 2
+    }
+
+    func showMaxItemAlert() {
+        guard !(view.contains(messageLabel)) else { return }
+        var statusHeight: CGFloat!
+        if #available(iOS 13.0, *) {
+            statusHeight = navigationBar.bounds.height
+        } else {
+            // Fallback on earlier versions
+            statusHeight = UIApplication.shared.statusBarFrame.height + navigationBar.bounds.height
+        }
+        messageLabel.frame = CGRect(x: 0,
+                                    y: statusHeight,
+                                    width: self.view.frame.width,
+                                    height: 0)
+        messageLabel.backgroundColor = .white
+        messageLabel.textColor = .black
+        messageLabel.textAlignment = .center
+        messageLabel.text = "Maximum \(settings.selection.max) photos please!"
+        view.addSubview(messageLabel)
+        UIView.animate(withDuration: 0.2) { [weak self] in
+            self?.messageLabel.frame.size.height = 40
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
+            UIView.animate(withDuration: 0.2) { [weak self] in
+                self?.messageLabel.frame.size.height = 0
+            }completion: { bool in
+                self?.messageLabel.removeFromSuperview()
+            }
+        }
     }
 }
